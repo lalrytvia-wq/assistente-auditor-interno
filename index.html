@@ -1,1 +1,846 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistente Auditor Interno Pro</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0a0a0a',
+                        cardBg: '#141414',
+                        accentRed: '#8b0000',
+                        accentRedHover: '#a30000',
+                        borderDark: '#262626'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- html2pdf.js CDN para geração de PDF profissional -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #262626;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8b0000;
+        }
+    </style>
+</head>
+<body class="bg-darkBg text-neutral-100 min-h-screen flex flex-col selection:bg-red-900 selection:text-white">
 
+    <header class="border-b border-borderDark bg-cardBg/80 backdrop-blur sticky top-0 z-50 px-4 lg:px-8 py-3.5 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-900 to-red-950 flex items-center justify-center border border-red-800/50 shadow-lg shadow-red-950/30">
+                <i class="fa-solid fa-microphone-lines text-red-400"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg tracking-tight text-white flex items-center gap-2">
+                    Assistente Auditor Interno <span class="text-xs px-2 py-0.5 rounded-full bg-red-950 text-red-300 border border-red-800/40">Pro</span>
+                </h1>
+                <p class="text-xs text-neutral-400">Auditoria, Pauta e Notas de Reunião</p>
+            </div>
+        </div>
+
+        <!-- Action Top Controls -->
+        <div class="flex items-center space-x-2 sm:space-x-3">
+            <button onclick="toggleMirrorMode()" id="mirrorBtn" class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-borderDark hover:bg-neutral-800 text-xs sm:text-sm font-medium transition border border-neutral-700/50">
+                <i class="fa-solid fa-display text-red-500"></i>
+                <span class="hidden sm:inline">Modo Espelho (Meet)</span>
+            </button>
+            <button onclick="openExportModal()" class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-accentRed hover:bg-accentRedHover text-xs sm:text-sm font-medium transition shadow-lg shadow-red-950/40 text-white">
+                <i class="fa-solid fa-file-export"></i>
+                <span>Gerar Ata</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT COLUMN: Setup, Scope & Agenda (5 cols) -->
+        <section class="lg:col-span-5 flex flex-col space-y-6">
+            
+            <!-- Meeting Meta Card -->
+            <div class="bg-cardBg border border-borderDark rounded-2xl p-4 sm:p-5 shadow-xl">
+                <h2 class="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-info-circle text-red-600"></i> Detalhes da Reunião
+                </h2>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs text-neutral-400 mb-1">Título da Reunião / Escopo</label>
+                        <input type="text" id="meetingTitle" placeholder="Ex: Alinhamento de Q3 e Metas" value="Alinhamento Estratégico de Projetos - Q3" class="w-full bg-darkBg border border-borderDark rounded-xl px-3.5 py-2.5 text-sm text-neutral-200 focus:outline-none focus:border-red-700 transition">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-neutral-400 mb-1">Participantes</label>
+                            <input type="text" id="meetingParticipants" placeholder="Ex: Ana, Carlos, João" value="Ana, Carlos, João, Equipe Tech" class="w-full bg-darkBg border border-borderDark rounded-xl px-3.5 py-2.5 text-sm text-neutral-200 focus:outline-none focus:border-red-700 transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-neutral-400 mb-1">Objetivo Principal</label>
+                            <input type="text" id="meetingObjective" placeholder="Definir entregas..." value="Definição de prazos e alocação" class="w-full bg-darkBg border border-borderDark rounded-xl px-3.5 py-2.5 text-sm text-neutral-200 focus:outline-none focus:border-red-700 transition">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Agenda / Pauta Card -->
+            <div class="bg-cardBg border border-borderDark rounded-2xl p-4 sm:p-5 shadow-xl flex-1 flex flex-col">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-semibold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-red-600"></i> Pauta da Reunião (<span id="agendaCount">3</span>)
+                    </h2>
+                    <button onclick="openAddAgendaModal()" class="text-xs bg-red-950/70 hover:bg-red-900/80 text-red-300 border border-red-800/50 px-2.5 py-1.5 rounded-lg transition flex items-center gap-1.5 font-medium">
+                        <i class="fa-solid fa-plus"></i> Novo Tópico
+                    </button>
+                </div>
+                <p class="text-[11px] text-neutral-400 mb-2">Clique em um tópico da pauta para vinculá-lo instantaneamente às anotações.</p>
+
+                <!-- Agenda Items List Container -->
+                <div id="agendaList" class="space-y-3 overflow-y-auto max-h-[360px] pr-1">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT COLUMN: Notes, Actions & Timer (7 cols) -->
+        <section class="lg:col-span-7 flex flex-col space-y-6">
+
+            <!-- Collaborative / Meeting Notes Card -->
+            <div class="bg-cardBg border border-borderDark rounded-2xl p-4 sm:p-5 shadow-xl flex-1 flex flex-col min-h-[300px]">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <h2 class="text-sm font-semibold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-pen-nib text-red-600"></i> Notas e Decisões em Tempo Real
+                    </h2>
+                    <div class="flex items-center space-x-2">
+                        <span id="spellCheckStatus" class="text-[11px] text-neutral-400 bg-borderDark px-2 py-0.5 rounded-full flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Corretor Ativo
+                        </span>
+                        <button onclick="insertTopicHeader()" id="btnInsertTopicHeader" class="hidden text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-600 px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 font-medium" title="Inserir marcador deste tópico no texto">
+                            <i class="fa-solid fa-link text-red-400"></i> Inserir Seção
+                        </button>
+                        <button onclick="applySmartCorrection()" class="text-xs bg-red-950/70 hover:bg-red-900/80 text-red-300 border border-red-800/50 px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 font-medium shadow" title="Corrigir ortografia e termos corporativos instantaneamente">
+                            <i class="fa-solid fa-wand-magic-sparkles text-red-400"></i> Otimizar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Indicador de Vínculo com Tópico da Pauta -->
+                <div id="activeTopicBanner" class="hidden items-center justify-between bg-red-950/40 border border-red-800/60 text-red-200 text-xs px-3 py-1.5 rounded-xl mb-3 animate-fade-in">
+                    <div class="flex items-center gap-2 overflow-hidden">
+                        <i class="fa-solid fa-bullseye text-red-500 animate-pulse"></i>
+                        <span>Anotando sobre: <strong id="activeTopicTitle" class="text-white font-semibold">Tópico Selecionado</strong></span>
+                    </div>
+                    <button onclick="clearActiveTopic()" class="text-neutral-400 hover:text-white transition text-xs pl-2" title="Desvincular tópico">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="relative flex-1 flex flex-col">
+                    <textarea id="meetingNotes" placeholder="Anote ideias principais, decisões tomadas e discussões importantes aqui... Clique nos tópicos da pauta ao lado para vinculá-los diretamente às notas!" class="w-full flex-1 bg-darkBg border border-borderDark rounded-xl p-4 text-sm text-neutral-200 focus:outline-none focus:border-red-700 transition resize-none min-h-[220px] font-sans leading-relaxed"></textarea>
+                    <!-- Floating Correction Notification Tooltip -->
+                    <div id="correctionToast" class="absolute bottom-3 right-3 hidden bg-neutral-900/95 border border-red-800 text-neutral-200 text-xs px-3 py-2 rounded-xl shadow-2xl backdrop-blur flex items-center gap-2 transition-all">
+                        <i class="fa-solid fa-circle-check text-red-500"></i>
+                        <span id="correctionToastText">Ortografia e termos corporativos otimizados!</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Items / Pending Tasks Card -->
+            <div class="bg-cardBg border border-borderDark rounded-2xl p-4 sm:p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-semibold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-check-double text-red-600"></i> Ações & Encaminhamentos (Action Items)
+                    </h2>
+                    <button onclick="openAddActionModal()" class="text-xs bg-red-950/70 hover:bg-red-900/80 text-red-300 border border-red-800/50 px-2.5 py-1.5 rounded-lg transition flex items-center gap-1.5 font-medium">
+                        <i class="fa-solid fa-plus"></i> Nova Ação
+                    </button>
+                </div>
+                <div id="actionList" class="space-y-2 max-h-[180px] overflow-y-auto pr-1">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    
+    <!-- Mirror Mode / Presentation View Modal (Simulates Screen Share on Meet) -->
+    <div id="mirrorOverlay" class="fixed inset-0 bg-black/95 z-50 hidden flex-col p-6 lg:p-10 backdrop-blur-md">
+        <div class="flex items-center justify-between pb-4 border-b border-borderDark mb-6">
+            <div class="flex items-center space-x-3">
+                <span class="px-3 py-1 bg-red-950 text-red-400 border border-red-800 rounded-full text-xs font-semibold animate-pulse flex items-center gap-1.5">
+                    <i class="fa-solid fa-broadcast-tower"></i> MODO ESPELHO ATIVO (Para Google Meet / Teams)
+                </span>
+                <h3 id="mirrorTitleDisplay" class="text-xl font-bold text-white">Alinhamento Estratégico de Projetos - Q3</h3>
+            </div>
+            <button onclick="toggleMirrorMode()" class="px-4 py-2 bg-borderDark hover:bg-neutral-800 text-neutral-200 rounded-xl text-sm font-semibold transition border border-neutral-700 flex items-center gap-2">
+                <i class="fa-solid fa-xmark text-red-500"></i> Fechar Espelho
+            </button>
+        </div>
+
+        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-hidden">
+            <!-- Left Side in Mirror: Big Agenda -->
+            <div class="bg-cardBg border border-borderDark rounded-2xl p-6 flex flex-col overflow-y-auto">
+                <h4 class="text-base font-bold text-red-500 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-list-check"></i> Pauta e Tópicos da Reunião
+                </h4>
+                <div id="mirrorAgendaContainer" class="space-y-3">
+                    <!-- Cloned items -->
+                </div>
+            </div>
+
+            <!-- Right Side in Mirror: Big Notes & Decisions -->
+            <div class="bg-cardBg border border-borderDark rounded-2xl p-6 flex flex-col overflow-y-auto">
+                <h4 class="text-base font-bold text-red-500 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-nib"></i> Notas em Tempo Real & Deliberadas
+                </h4>
+                <div id="mirrorNotesDisplay" class="flex-1 text-neutral-200 text-base whitespace-pre-wrap font-sans bg-darkBg p-4 rounded-xl border border-borderDark leading-relaxed">
+                    Nenhuma nota registrada até o momento...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Agenda Modal -->
+    <div id="agendaModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-cardBg border border-borderDark rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-red-600"></i> Adicionar Tópico à Pauta
+            </h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs text-neutral-400 mb-1">Título do Tópico</label>
+                    <input type="text" id="newAgendaTitle" placeholder="Ex: Status report do projeto X" class="w-full bg-darkBg border border-borderDark rounded-xl px-3.5 py-2.5 text-sm text-neutral-200 focus:outline-none focus:border-red-700 transition">
+                </div>
+                <div>
+                    <label class="block text-xs text-neutral-400 mb-1">Tempo Estimado (min)</label>
+                    <input type="number" id="newAgendaTime" value="10" class="w-full bg-darkBg border border-borderDark rounded-xl px-3.5 py-2.5 text-sm text-neutral-200 focus:outline-none focus:border-red-700 transition">
+                </div>
+            </div>
+            <div class="flex items-center justify-end space-x-3 mt-6">
+                <button onclick="closeAddAgendaModal()" class="px-4 py-2 rounded-xl bg-borderDark hover:bg-neutral-800 text-xs font-semibold text-neutral-300 transition">Cancelar</button>
+                <button onclick="saveAgendaItem()" class="px-4 py-2 rounded-xl bg-accentRed hover:bg-accentRedHover text-xs font-semibold text-white transition shadow-lg shadow-red-950/40">Adicionar Tópico</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Action Item Modal -->
+    <div id="actionModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-cardBg border border-borderDark rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-check-double text-red-600"></i> Nova Ação (Action Item)
+            </h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs text-neutral-400 mb-1">Descrição da Ação</label>
+                    <input type="text" id="newActionDesc" placeholder="Ex: Enviar orçamento revisado" class="w-full bg-darkBg border border-borderDark rounded-xl px-3.5 py-2.5 text-sm text-neutral-200 focus:outline-none focus:border-red-700 transition">
+                </div>
+                <div>
+                    <label class="block text-xs text-neutral-400 mb-1">Responsável</label>
+                    <input type="text" id="newActionOwner" placeholder="Ex: Carlos" class="w-full bg-darkBg border border-borderDark rounded-xl px-3.5 py-2.5 text-sm text-neutral-200 focus:outline-none focus:border-red-700 transition">
+                </div>
+            </div>
+            <div class="flex items-center justify-end space-x-3 mt-6">
+                <button onclick="closeAddActionModal()" class="px-4 py-2 rounded-xl bg-borderDark hover:bg-neutral-800 text-xs font-semibold text-neutral-300 transition">Cancelar</button>
+                <button onclick="saveActionItem()" class="px-4 py-2 rounded-xl bg-accentRed hover:bg-accentRedHover text-xs font-semibold text-white transition shadow-lg shadow-red-950/40">Salvar Ação</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export / Ata Modal -->
+    <div id="exportModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-cardBg border border-borderDark rounded-2xl w-full max-w-3xl p-6 shadow-2xl flex flex-col max-h-[90vh]">
+            <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-file-lines text-red-600"></i> Ata & Relatório de Auditoria Gerado
+            </h3>
+            <p class="text-xs text-neutral-400 mb-4">Resumo estruturado com todos os vínculos de pauta, anotações e plano de ação.</p>
+            
+            <textarea id="exportTextContent" readonly class="w-full flex-1 bg-darkBg border border-borderDark rounded-xl p-4 text-xs font-mono text-neutral-200 focus:outline-none resize-none min-h-[280px] mb-4"></textarea>
+
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <button onclick="closeExportModal()" class="px-4 py-2 rounded-xl bg-borderDark hover:bg-neutral-800 text-xs font-semibold text-neutral-300 transition">Fechar</button>
+                <div class="flex items-center space-x-2">
+                    <button onclick="copyAtaToClipboard()" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-semibold transition border border-neutral-700">
+                        <i class="fa-solid fa-copy"></i> Copiar Texto
+                    </button>
+                    <button onclick="generatePDF()" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-accentRed hover:bg-accentRedHover text-xs font-semibold text-white transition shadow-lg shadow-red-950/40">
+                        <i class="fa-solid fa-file-pdf"></i> Baixar Relatório (PDF)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layout oculto formatado exclusivamente para o gerador de PDF -->
+    <div id="pdfExportContainer" class="hidden"></div>
+
+    <script>
+        // State management
+        let state = {
+            agenda: [
+                { id: 1, title: 'Revisão de métricas e KPIs do último ciclo', time: '10 min', completed: true },
+                { id: 2, title: 'Gargalos na entrega dos entregáveis de design', time: '15 min', completed: false },
+                { id: 3, title: 'Definição de cronograma para o próximo sprint', time: '20 min', completed: false }
+            ],
+            actions: [
+                { id: 1, desc: 'Atualizar documentação de API', owner: 'Ana', done: false },
+                { id: 2, desc: 'Agendar call com fornecedor de infra', owner: 'João', done: true }
+            ],
+            activeAgendaId: null
+        };
+
+        // Dicionário ultra-rápido de correção e substituição corporativa/português
+        const corporateDictionary = {
+            "feedback": "feedback",
+            "feedbacks": "feedbacks",
+            "briefing": "briefing",
+            "deadline": "deadline",
+            "brainstorming": "brainstorming",
+            "follow up": "follow-up",
+            "followup": "follow-up",
+            "kickoff": "kickoff",
+            "roadmap": "roadmap",
+            "benchmark": "benchmark",
+            "stakeholders": "stakeholders",
+            "stalkeholders": "stakeholders",
+            "stalkeholder": "stakeholder",
+            "deploy": "deploy",
+            "bug": "bug",
+            "bugs": "bugs",
+            "home office": "home office",
+            "compliance": "compliance",
+            "reuniao": "reunião",
+            "reunioes": "reuniões",
+            "tambem": "também",
+            "nao": "não",
+            "cao": "ção",
+            "impreterivelmente": "impreterivelmente",
+            "estrategia": "estratégia",
+            "estrategico": "estratégico",
+            "alinhamento": "alinhamento",
+            "cronograma": "cronograma",
+            "orcamento": "orçamento",
+            "proposito": "propósito",
+            "analise": "análise",
+            "prioridade": "prioridade",
+            "tecnologia": "tecnologia",
+            "impasse": "impasse",
+            "desenvolvimento": "desenvolvimento",
+            "entregavel": "entregável",
+            "entregaveis": "entregáveis"
+        };
+
+        // Initialize UI on load
+        window.addEventListener('DOMContentLoaded', () => {
+            renderAgenda();
+            renderActions();
+            
+            // Sync meeting title to mirror modal header
+            document.getElementById('meetingTitle').addEventListener('input', (e) => {
+                document.getElementById('mirrorTitleDisplay').innerText = e.target.value || 'Reunião Sem Título';
+            });
+
+            // Live sync notes to mirror mode
+            const notesArea = document.getElementById('meetingNotes');
+            notesArea.addEventListener('input', (e) => {
+                const val = e.target.value;
+                const mirrorDisplay = document.getElementById('mirrorNotesDisplay');
+                mirrorDisplay.innerText = val.trim() ? val : 'Nenhuma nota registrada até o momento...';
+            });
+
+            // Auto-correção rápida ao pressionar Espaço ou Pontuação
+            notesArea.addEventListener('keydown', (e) => {
+                if (e.key === ' ' || e.key === 'Enter' || e.key === '.') {
+                    setTimeout(runLiveTypingCorrection, 50);
+                }
+            });
+        });
+
+        // Seleção e vínculo intuitivo de Tópico da Pauta com as Anotações
+        function selectActiveTopic(id, event) {
+            // Se o clique foi no checkbox ou botão de lixeira, ignora a seleção do tópico
+            if (event && (event.target.tagName === 'INPUT' || event.target.closest('button'))) {
+                return;
+            }
+
+            state.activeAgendaId = id;
+            const topic = state.agenda.find(item => item.id === id);
+
+            if (!topic) return;
+
+            // Exibe indicador na área de notas
+            const banner = document.getElementById('activeTopicBanner');
+            const titleDisplay = document.getElementById('activeTopicTitle');
+            const insertBtn = document.getElementById('btnInsertTopicHeader');
+
+            titleDisplay.innerText = topic.title;
+            banner.classList.remove('hidden');
+            banner.classList.add('flex');
+            insertBtn.classList.remove('hidden');
+
+            renderAgenda();
+
+            // Foca na caixa de texto de anotações
+            const notesArea = document.getElementById('meetingNotes');
+            notesArea.focus();
+        }
+
+        function clearActiveTopic() {
+            state.activeAgendaId = null;
+            document.getElementById('activeTopicBanner').classList.add('hidden');
+            document.getElementById('activeTopicBanner').classList.remove('flex');
+            document.getElementById('btnInsertTopicHeader').classList.add('hidden');
+            renderAgenda();
+        }
+
+        function insertTopicHeader() {
+            if (!state.activeAgendaId) return;
+            const topic = state.agenda.find(item => item.id === state.activeAgendaId);
+            if (!topic) return;
+
+            const notesArea = document.getElementById('meetingNotes');
+            const headerTag = `\n\n📌 [TÓPICO: ${topic.title.toUpperCase()}]\n`;
+            
+            // Adiciona a marcação no texto onde o cursor está ou ao final
+            const startPos = notesArea.selectionStart;
+            const endPos = notesArea.selectionEnd;
+
+            notesArea.value = notesArea.value.substring(0, startPos) + headerTag + notesArea.value.substring(endPos);
+            notesArea.focus();
+            notesArea.selectionStart = startPos + headerTag.length;
+            notesArea.selectionEnd = startPos + headerTag.length;
+
+            // Atualiza visualização no espelho
+            document.getElementById('mirrorNotesDisplay').innerText = notesArea.value;
+            showCorrectionToast(`Marcador para "${topic.title}" inserido nas notas!`);
+        }
+
+        // Agenda Handlers
+        function renderAgenda() {
+            const container = document.getElementById('agendaList');
+            document.getElementById('agendaCount').innerText = state.agenda.length;
+            
+            if (state.agenda.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-xs text-neutral-500">Nenhum tópico na pauta. Clique em "Novo Tópico".</div>`;
+                return;
+            }
+
+            container.innerHTML = state.agenda.map((item, index) => {
+                const isActive = item.id === state.activeAgendaId;
+                return `
+                <div onclick="selectActiveTopic(${item.id}, event)" class="flex items-center justify-between p-3 rounded-xl border transition cursor-pointer ${isActive ? 'bg-red-950/40 border-red-600 shadow-md shadow-red-950/50' : 'bg-darkBg border-borderDark hover:border-neutral-700'}">
+                    <div class="flex items-center space-x-3 pr-2 flex-1">
+                        <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleAgendaItem(${item.id})" class="w-4 h-4 rounded border-neutral-700 bg-neutral-900 text-red-700 focus:ring-0 cursor-pointer">
+                        <span class="text-xs sm:text-sm font-medium ${item.completed ? 'line-through text-neutral-500' : (isActive ? 'text-white font-semibold' : 'text-neutral-200')}">
+                            ${index + 1}. ${item.title}
+                        </span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        ${isActive ? '<span class="text-[10px] bg-red-900 text-red-200 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider animate-pulse">Ativo</span>' : ''}
+                        <span class="text-[10px] bg-borderDark px-2 py-0.5 rounded text-neutral-400 font-mono">${item.time}</span>
+                        <button onclick="deleteAgendaItem(${item.id})" class="text-neutral-500 hover:text-red-500 transition p-1"><i class="fa-solid fa-trash text-xs"></i></button>
+                    </div>
+                </div>
+            `}).join('');
+
+            renderMirrorAgenda();
+        }
+
+        // Corretor em tempo real palavra por palavra
+        function runLiveTypingCorrection() {
+            const textarea = document.getElementById('meetingNotes');
+            let text = textarea.value;
+            
+            let words = text.split(/(\s+)/);
+            let modified = false;
+
+            words = words.map(word => {
+                let cleanWord = word.toLowerCase().trim();
+                if (corporateDictionary[cleanWord]) {
+                    let corrected = corporateDictionary[cleanWord];
+                    if (word[0] && word[0] === word[0].toUpperCase()) {
+                        corrected = corrected.charAt(0).toUpperCase() + corrected.slice(1);
+                    }
+                    if (corrected !== word.trim()) {
+                        modified = true;
+                        return word.replace(word.trim(), corrected);
+                    }
+                }
+                return word;
+            });
+
+            if (modified) {
+                const cursorPosition = textarea.selectionStart;
+                textarea.value = words.join('');
+                textarea.setSelectionRange(cursorPosition, cursorPosition);
+            }
+        }
+
+        // Função de Correção Completa Instantânea
+        function applySmartCorrection() {
+            const textarea = document.getElementById('meetingNotes');
+            let text = textarea.value;
+            if (!text.trim()) {
+                showCorrectionToast('Insira alguma nota para corrigir.');
+                return;
+            }
+
+            let correctedText = text
+                .replace(/\b(reuniao|reuniãoes)\b/gi, 'reunião')
+                .replace(/\b(reunioes)\b/gi, 'reuniões')
+                .replace(/\b(tambem)\b/gi, 'também')
+                .replace(/\b(nao)\b/gi, 'não')
+                .replace(/\b(orcamento)\b/gi, 'orçamento')
+                .replace(/\b(estrategia)\b/gi, 'estratégia')
+                .replace(/\b(analise)\b/gi, 'análise')
+                .replace(/\b(stalkeholder|stalkeholders)\b/gi, (match) => match.toLowerCase().startsWith('stalke') ? 'stakeholder' + (match.endsWith('s') ? 's' : '') : match)
+                .replace(/\b(followup)\b/gi, 'follow-up')
+                .replace(/([.?!]\s+)([a-z])/g, (match, p1, p2) => p1 + p2.toUpperCase())
+                .replace(/^([a-z])/, (match) => match.toUpperCase())
+                .replace(/[ \t]+/g, ' ');
+
+            textarea.value = correctedText;
+
+            const mirrorDisplay = document.getElementById('mirrorNotesDisplay');
+            if (mirrorDisplay) {
+                mirrorDisplay.innerText = correctedText;
+            }
+
+            showCorrectionToast('Ortografia e termos corporativos otimizados com sucesso!');
+        }
+
+        function showCorrectionToast(msg) {
+            const toast = document.getElementById('correctionToast');
+            const toastText = document.getElementById('correctionToastText');
+            toastText.innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2500);
+        }
+
+        function toggleAgendaItem(id) {
+            const item = state.agenda.find(i => i.id === id);
+            if (item) {
+                item.completed = !item.completed;
+                renderAgenda();
+            }
+        }
+
+        function deleteAgendaItem(id) {
+            if (state.activeAgendaId === id) {
+                clearActiveTopic();
+            }
+            state.agenda = state.agenda.filter(i => i.id !== id);
+            renderAgenda();
+        }
+
+        function openAddAgendaModal() {
+            document.getElementById('agendaModal').classList.remove('hidden');
+            document.getElementById('agendaModal').classList.add('flex');
+            document.getElementById('newAgendaTitle').value = '';
+            document.getElementById('newAgendaTitle').focus();
+        }
+
+        function closeAddAgendaModal() {
+            document.getElementById('agendaModal').classList.remove('flex');
+            document.getElementById('agendaModal').classList.add('hidden');
+        }
+
+        function saveAgendaItem() {
+            const title = document.getElementById('newAgendaTitle').value.trim();
+            const time = document.getElementById('newAgendaTime').value.trim() || '10';
+            if (!title) return;
+
+            state.agenda.push({
+                id: Date.now(),
+                title: title,
+                time: time + ' min',
+                completed: false
+            });
+
+            closeAddAgendaModal();
+            renderAgenda();
+        }
+
+        // Action Items Handlers
+        function renderActions() {
+            const container = document.getElementById('actionList');
+
+            if (state.actions.length === 0) {
+                container.innerHTML = `<div class="text-center py-4 text-xs text-neutral-500">Nenhuma ação registrada.</div>`;
+                return;
+            }
+
+            container.innerHTML = state.actions.map(action => `
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-darkBg border border-borderDark">
+                    <div class="flex items-center space-x-3">
+                        <input type="checkbox" ${action.done ? 'checked' : ''} onchange="toggleAction(${action.id})" class="w-4 h-4 rounded border-neutral-700 bg-neutral-900 text-red-700 focus:ring-0 cursor-pointer">
+                        <span class="text-xs ${action.done ? 'line-through text-neutral-500' : 'text-neutral-200'}">
+                            ${action.desc} <span class="text-[10px] text-red-400 font-semibold ml-1 bg-red-950/60 px-1.5 py-0.5 rounded">@${action.owner}</span>
+                        </span>
+                    </div>
+                    <button onclick="deleteAction(${action.id})" class="text-neutral-500 hover:text-red-500 transition p-1"><i class="fa-solid fa-trash text-xs"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function toggleAction(id) {
+            const act = state.actions.find(a => a.id === id);
+            if (act) {
+                act.done = !act.done;
+                renderActions();
+            }
+        }
+
+        function deleteAction(id) {
+            state.actions = state.actions.filter(a => a.id !== id);
+            renderActions();
+        }
+
+        function openAddActionModal() {
+            document.getElementById('actionModal').classList.remove('hidden');
+            document.getElementById('actionModal').classList.add('flex');
+            document.getElementById('newActionDesc').value = '';
+            document.getElementById('newActionOwner').value = '';
+            document.getElementById('newActionDesc').focus();
+        }
+
+        function closeAddActionModal() {
+            document.getElementById('actionModal').classList.remove('flex');
+            document.getElementById('actionModal').classList.add('hidden');
+        }
+
+        function saveActionItem() {
+            const desc = document.getElementById('newActionDesc').value.trim();
+            const owner = document.getElementById('newActionOwner').value.trim() || 'Geral';
+            if (!desc) return;
+
+            state.actions.push({
+                id: Date.now(),
+                desc: desc,
+                owner: owner,
+                done: false
+            });
+
+            closeAddActionModal();
+            renderActions();
+        }
+
+        // Mirror / Meet Sharing Mode
+        function toggleMirrorMode() {
+            const overlay = document.getElementById('mirrorOverlay');
+            const isHidden = overlay.classList.contains('hidden');
+            
+            if (isHidden) {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+                renderMirrorAgenda();
+                
+                const notes = document.getElementById('meetingNotes').value;
+                document.getElementById('mirrorNotesDisplay').innerText = notes.trim() ? notes : 'Nenhuma nota registrada até o momento...';
+            } else {
+                overlay.classList.remove('flex');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function renderMirrorAgenda() {
+            const container = document.getElementById('mirrorAgendaContainer');
+            if (!container) return;
+
+            container.innerHTML = state.agenda.map((item, index) => {
+                const isActive = item.id === state.activeAgendaId;
+                return `
+                <div class="flex items-center justify-between p-3.5 rounded-xl ${isActive ? 'bg-red-950/60 border-2 border-red-600 shadow-lg' : 'bg-darkBg border border-borderDark'}">
+                    <div class="flex items-center space-x-3">
+                        <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${item.completed ? 'bg-red-950 text-red-400 border border-red-800' : 'bg-neutral-800 text-neutral-300'}">
+                            ${index + 1}
+                        </span>
+                        <span class="text-sm font-medium ${item.completed ? 'line-through text-neutral-500' : 'text-neutral-200'}">
+                            ${item.title}
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${isActive ? '<span class="text-xs bg-red-800 text-white px-2 py-0.5 rounded font-bold">EM PAUTA</span>' : ''}
+                        <span class="text-xs bg-borderDark px-2 py-1 rounded text-neutral-400 font-mono">${item.time}</span>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        // Export / Ata Generation
+        function openExportModal() {
+            const title = document.getElementById('meetingTitle').value || 'Reunião Executiva';
+            const participants = document.getElementById('meetingParticipants').value || 'Não informados';
+            const objective = document.getElementById('meetingObjective').value || 'Não informado';
+            const notes = document.getElementById('meetingNotes').value || 'Nenhuma nota registrada.';
+
+            let agendaText = state.agenda.map((a, i) => `[${a.completed ? 'X' : ' '}] ${i + 1}. ${a.title} (${a.time})`).join('\n');
+            let actionsText = state.actions.map(act => `- [${act.done ? 'X' : ' '}] ${act.desc} (Responsável: @${act.owner})`).join('\n');
+
+            const ata = `=== ATA DE REUNIÃO - AUDITORIA INTERNA ===
+Título: ${title}
+Data: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
+Participantes: ${participants}
+Objetivo: ${objective}
+
+---
+PAUTA DA REUNIÃO:
+${agendaText}
+
+---
+NOTAS E DELIBERAÇÕES:
+${notes}
+
+---
+AÇÕES & ENCAMINHAMENTOS (ACTION ITEMS):
+${actionsText || 'Nenhuma ação registrada.'}
+
+Gerado via Assistente Auditor Interno.`;
+
+            document.getElementById('exportTextContent').value = ata;
+            document.getElementById('exportModal').classList.remove('hidden');
+            document.getElementById('exportModal').classList.add('flex');
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.remove('flex');
+            document.getElementById('exportModal').classList.add('hidden');
+        }
+
+        function copyAtaToClipboard() {
+            const textarea = document.getElementById('exportTextContent');
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                alertCustom('Ata copiada com sucesso para a área de transferência!');
+            } catch (err) {
+                alertCustom('Erro ao copiar ata.');
+            }
+        }
+
+        // Função de Geração de Relatório em PDF Profissional
+        function generatePDF() {
+            const title = document.getElementById('meetingTitle').value || 'Reunião Executiva';
+            const participants = document.getElementById('meetingParticipants').value || 'Não informados';
+            const objective = document.getElementById('meetingObjective').value || 'Não informado';
+            const notes = document.getElementById('meetingNotes').value || 'Nenhuma nota registrada.';
+
+            const pdfContainer = document.getElementById('pdfExportContainer');
+
+            // Constrói HTML estilizado e corporativo em PDF
+            pdfContainer.innerHTML = `
+                <div style="font-family: Arial, sans-serif; padding: 30px; color: #111; line-height: 1.5; background: #fff;">
+                    <div style="border-bottom: 3px solid #8b0000; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h1 style="color: #8b0000; font-size: 20px; margin: 0; font-weight: bold; text-transform: uppercase;">Relatório de Reunião & Auditoria</h1>
+                            <p style="color: #555; font-size: 11px; margin: 4px 0 0 0;">Assistente Auditor Interno • Documento Executivo</p>
+                        </div>
+                        <div style="text-align: right; font-size: 11px; color: #666;">
+                            <p style="margin:0;"><strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
+                            <p style="margin:0;"><strong>Hora:</strong> ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}</p>
+                        </div>
+                    </div>
+
+                    <div style="background: #f9f9f9; border-left: 4px solid #8b0000; padding: 12px 15px; margin-bottom: 20px; border-radius: 4px;">
+                        <p style="margin: 0 0 6px 0; font-size: 13px;"><strong>Título:</strong> ${title}</p>
+                        <p style="margin: 0 0 6px 0; font-size: 12px; color: #333;"><strong>Participantes:</strong> ${participants}</p>
+                        <p style="margin: 0; font-size: 12px; color: #333;"><strong>Objetivo Principal:</strong> ${objective}</p>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="font-size: 14px; color: #8b0000; border-bottom: 1px solid #ddd; padding-bottom: 5px; text-transform: uppercase;">1. Pauta da Reunião</h3>
+                        <ul style="padding-left: 20px; font-size: 12px; color: #222;">
+                            ${state.agenda.map(a => `<li style="margin-bottom: 5px;"><strong>[${a.completed ? 'Concluído' : 'Pendente'}]</strong> ${a.title} <em>(${a.time})</em></li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="font-size: 14px; color: #8b0000; border-bottom: 1px solid #ddd; padding-bottom: 5px; text-transform: uppercase;">2. Notas, Discussões e Deliberações</h3>
+                        <div style="background: #fff; border: 1px solid #eee; padding: 12px; font-size: 12px; white-space: pre-wrap; font-family: monospace; color: #222; border-radius: 4px; min-height: 100px;">
+                            ${notes}
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="font-size: 14px; color: #8b0000; border-bottom: 1px solid #ddd; padding-bottom: 5px; text-transform: uppercase;">3. Plano de Ação e Encaminhamentos</h3>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px;">
+                            <thead>
+                                <tr style="background: #f0f0f0; text-align: left;">
+                                    <th style="padding: 8px; border: 1px solid #ddd;">Status</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd;">Ação / Descrição</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd;">Responsável</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${state.actions.map(act => `
+                                    <tr>
+                                        <td style="padding: 8px; border: 1px solid #ddd;">${act.done ? 'Concluído' : 'Em Aberto'}</td>
+                                        <td style="padding: 8px; border: 1px solid #ddd;">${act.desc}</td>
+                                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #8b0000;">@${act.owner}</td>
+                                    </tr>
+                                `).join('') || '<tr><td colspan="3" style="padding:8px; border:1px solid #ddd; text-align:center;">Nenhuma ação registrada</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="margin-top: 40px; padding-top: 15px; border-top: 1px solid #eee; text-align: center; font-size: 10px; color: #888;">
+                        Relatório gerado automaticamente pelo Assistente Auditor Interno • Todos os direitos reservados.
+                    </div>
+                </div>
+            `;
+
+            pdfContainer.classList.remove('hidden');
+
+            const opt = {
+                margin:       10,
+                filename:     `Ata_Auditoria_${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(pdfContainer).save().then(() => {
+                pdfContainer.classList.add('hidden');
+                showCorrectionToast('Relatório PDF gerado e baixado com sucesso!');
+            }).catch(err => {
+                pdfContainer.classList.add('hidden');
+                alertCustom('Erro ao gerar arquivo PDF.');
+            });
+        }
+
+        function alertCustom(msg) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-5 right-5 z-50 bg-neutral-900 border border-red-800 text-white px-4 py-3 rounded-xl shadow-2xl text-xs flex items-center gap-2 animate-bounce';
+            toast.innerHTML = `<i class="fa-solid fa-circle-check text-red-500"></i> ${msg}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+
+</body>
+</html>
